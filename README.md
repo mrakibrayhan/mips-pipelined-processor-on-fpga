@@ -39,6 +39,7 @@ Synchronous-read M9K memories: dual-port ROM (1 M9K, fetch + loads), byte-enable
 - `MIPS_Pipelined_Cpu.qpf`
 - `MIPS_Pipelined_Cpu.qsf`
 - `MIPS_Pipelined_Cpu.spf`
+- `assembler_mips.py`
 
 - `LICENSE`, `.gitignore`, `README.md`
 
@@ -56,6 +57,13 @@ The `.qsf` already contains the device (`EP4CE6E22C8`), the pin assignments and 
 - Stop rule: `syscall`, `break`, or `j .` halts; illegal instruction = fault.
 - The program is loaded from `program.hex`, the initial RAM from `data.hex`, both when the FPGA is programmed. Reset does not reload the RAM; program the FPGA again to restore it.
 - **Snapshot / debug:** when the program halts, or when the ISSP source bit is set, the CPU is frozen and registers and RAM words are copied into small RAMs. Read them in Quartus with *Tools > In-System Memory Content Editor*; read counters and status with *Tools > In-System Sources and Probes Editor*. CPI = cycle counter / instruction counter.
+
+## Writing your own program
+`assembler_mips.py` (Python 3, no extra packages) turns an assembly file into the `program.hex` that the CPU loads when the FPGA is programmed:
+```
+python assembler_mips.py prog.s -o program.hex --core p
+```
+Copy the new `program.hex` (and `data.hex` if the assembler wrote one) into the Quartus project folder and compile again. Run `python assembler_mips.py --help` for all options. The cores have no branch delay slot: put a `nop` after every `jal` / `jalr` (or use `--auto-nop`), because the return address is PC + 8.
 
 ## Limitations
 - Subset ISA, no interrupts, no caches, no MMU, no floating point.
